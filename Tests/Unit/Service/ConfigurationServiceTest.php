@@ -39,37 +39,13 @@ class ConfigurationServiceTest extends UnitTestCase {
 	}
 
 	public function testWriteCachedConfigurationIfMissing() {
-		$GLOBALS['TYPO3_DB'] = $this->getMock(
-			'TYPO3\\CMS\\Core\\Database\\DatabaseConnection',
-			array('prepare_SELECTquery'),
-			array(), '', FALSE
-		);
-		$preparedStatementMock = $this->getMock(
-			'TYPO3\\CMS\\Core\\Database\\PreparedStatement',
-			array('execute', 'fetch', 'free'),
-			array(), '', FALSE
-		);
-		$preparedStatementMock->expects($this->any())->method('execute')->willReturn(FALSE);
-		$preparedStatementMock->expects($this->any())->method('free');
-		$preparedStatementMock->expects($this->any())->method('fetch')->willReturn(FALSE);;
-		$GLOBALS['TYPO3_DB']->expects($this->any())->method('prepare_SELECTquery')->willReturn($preparedStatementMock);
 		/** @var ConfigurationService|\PHPUnit_Framework_MockObject_MockObject $service */
 		$service = $this->getMock(
 			'FluidTYPO3\\Fluidcontent\\Service\\ConfigurationService',
-			array('getAllRootTypoScriptTemplates', 'getTypoScriptTemplatesInRootline', 'renderPageTypoScriptForPageUid'),
+			array('getPageTsConfig'),
 			array(), '', FALSE
 		);
-		$service->expects($this->once())->method('getTypoScriptTemplatesInRootline')->willReturn(array(array('pid' => 1)));
-		$service->expects($this->any())->method('renderPageTypoScriptForPageUid')->willReturn('test');
-		$service->injectConfigurationManager(GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager')
-			->get('TYPO3\\CMS\\Extbase\\Configuration\\ConfigurationManagerInterface'));
-		$service->injectCacheManager(GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager')
-			->get('TYPO3\\CMS\\Core\\Cache\\CacheManager'));
-		$service->injectRecordService(GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager')
-			->get('FluidTYPO3\\Flux\\Service\\WorkspacesAwareRecordService'));
-		$pageRepository = $this->getMock(PageRepository::class, array('getRootLine'));
-		$pageRepository->expects($this->any())->method('getRootLine')->willReturn(array(array('uid' => 1)));
-		$service->injectPageRepository($pageRepository);
+		$service->expects($this->any())->method('getPageTsConfig')->willReturn('test');
 		$service->writeCachedConfigurationIfMissing();
 	}
 
@@ -245,15 +221,22 @@ class ConfigurationServiceTest extends UnitTestCase {
 	 * @test
 	 */
 	public function onlyFetchRootTypoScriptOfRootlineIfTheFluxConfigurationManagerIsInjected() {
+		$cache = $this->getMock('TYPO3\\CMS\\Core\\Cache\\Frontend\\VariableFrontend', array('has', 'set', 'get'), array(), '', FALSE);
+		$cache->expects($this->once())->method('has')->willReturn(FALSE);
+		$cache->expects($this->once())->method('set');
+		$cache->expects($this->once())->method('get');
+		$manager = $this->getMock('TYPO3\\CMS\\Core\\Cache\\CacheManager', array('getCache'));
+		$manager->expects($this->once())->method('getCache')->willReturn($cache);
 		$service = $this->getMock(
 			'FluidTYPO3\\Fluidcontent\\Service\\ConfigurationService',
 			array('getAllRootTypoScriptTemplates', 'renderPageTypoScriptForPageUid', 'getTypoScriptTemplatesInRootline'),
 			array(), '', FALSE
 		);
-		$service->expects($this->once())->method('getTypoScriptTemplatesInRootline')->will($this->returnValue(array()));
-		$service->expects($this->never())->method('getAllRootTypoScriptTemplates');
+		$service->expects($this->never())->method('getTypoScriptTemplatesInRootline');
+		$service->expects($this->once())->method('getAllRootTypoScriptTemplates')->willReturn(array());
 
 		$service->injectConfigurationManager($this->getMock('FluidTYPO3\Flux\Configuration\ConfigurationManager'));
+		$service->injectCacheManager($manager);
 		$service->getPageTsConfig();
 	}
 
