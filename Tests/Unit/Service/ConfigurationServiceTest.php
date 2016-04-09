@@ -119,7 +119,7 @@ class ConfigurationServiceTest extends UnitTestCase {
 		$mock->injectObjectManager($objectManager);
 		$mock->expects($this->once())->method('getContentConfiguration')->willReturn(array(
 			'fluidcontent' => array(
-				'templateRootPath' => 'EXT:fluidcontent/Tests/Fixtures/Templates/'
+				'templateRootPaths' => array('EXT:fluidcontent/Tests/Fixtures/Templates/')
 			)
 		));
 		$mock->expects($this->exactly(2))->method('message');
@@ -139,7 +139,7 @@ class ConfigurationServiceTest extends UnitTestCase {
 		$mock->injectObjectManager($objectManager);
 		$paths = array(
 			'fluidcontent' => array(
-				'templateRootPath' => 'EXT:fluidcontent/Tests/Fixtures/Templates/'
+				'templateRootPaths' => array('EXT:fluidcontent/Tests/Fixtures/Templates/')
 			)
 		);
 		$mock->expects($this->once())->method('getContentConfiguration')->willReturn($paths);
