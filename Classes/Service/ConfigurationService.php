@@ -152,9 +152,19 @@ class ConfigurationService extends FluxService implements SingletonInterface {
 	 * @return string
 	 */
 	public function getPageTsConfig() {
-		$cache = $this->manager->getCache('fluidcontent');
-		if (!$cache->has('pageTsConfig')) {
-			$pageTsConfig = '';
+		// cache is not available during installation of extension, however
+		// this method needs to still succeed (otherwise exception will prevent
+		// installation to complete)
+		$cacheExists = $this->manager->hasCache('fluidcontent');
+		$cache = $cacheExists ? $this->manager->getCache('fluidcontent') : NULL;
+		$cachedPageTsConfigExists = ($cache !== NULL) && $cache->has('pageTsConfig');
+
+		$pageTsConfig = '';
+		if ($cachedPageTsConfigExists) {
+			// just use the cached PageTSConfig if available
+			$pageTsConfig = $cache->get('pageTsConfig');
+		} else {
+			// PageTSConfig is not yet available from cache, get it now
 			$templates = $this->getAllRootTypoScriptTemplates();
 			$processed = array();
 			foreach ($templates as $template) {
@@ -165,9 +175,14 @@ class ConfigurationService extends FluxService implements SingletonInterface {
 				$pageTsConfig .= $this->renderPageTypoScriptForPageUid($pageUid);
 				$processed[$pageUid] = 1;
 			}
-			$cache->set('pageTsConfig', $pageTsConfig, array(), 86400);
+
+			// remember in cache for next call, if available
+			if ($cache !== NULL) {
+				$cache->set('pageTsConfig', $pageTsConfig, array(), 86400);
+			}
 		}
-		return $cache->get('pageTsConfig');
+
+		return $pageTsConfig;
 	}
 
 	/**
