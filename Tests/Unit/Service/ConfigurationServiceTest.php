@@ -21,6 +21,7 @@ use TYPO3\CMS\Frontend\Page\PageRepository;
  * Class ConfigurationServiceTest
  */
 class ConfigurationServiceTest extends UnitTestCase {
+	const CACHE_KEY_PAGETSCONFIG = 'pageTsConfig';
 
 	public function testGetContentConfiguration() {
 		Core::registerProviderExtensionKey('FluidTYPO3.Fluidcontent', 'Content');
@@ -220,12 +221,14 @@ class ConfigurationServiceTest extends UnitTestCase {
 	/**
 	 * @test
 	 */
-	public function onlyFetchRootTypoScriptOfRootlineIfTheFluxConfigurationManagerIsInjected() {
+	public function testGetPageTsConfigFetchesAndCachesRootTypoScriptIfNotCached() {
+		$expectedValue = 'This will be fetched and cached.';
 		$cache = $this->getMock('TYPO3\\CMS\\Core\\Cache\\Frontend\\VariableFrontend', array('has', 'set', 'get'), array(), '', FALSE);
-		$cache->expects($this->once())->method('has')->willReturn(FALSE);
-		$cache->expects($this->once())->method('set');
-		$cache->expects($this->once())->method('get');
-		$manager = $this->getMock('TYPO3\\CMS\\Core\\Cache\\CacheManager', array('getCache'));
+		$cache->expects($this->once())->method('has')->with($this->equalTo(self::CACHE_KEY_PAGETSCONFIG))->willReturn(FALSE);
+		$cache->expects($this->once())->method('set')->with($this->equalTo(self::CACHE_KEY_PAGETSCONFIG), $this->equalTo($expectedValue));
+		$cache->expects($this->never())->method('get');
+		$manager = $this->getMock('TYPO3\\CMS\\Core\\Cache\\CacheManager', array('hasCache', 'getCache'));
+		$manager->expects($this->once())->method('hasCache')->willReturn(TRUE);
 		$manager->expects($this->once())->method('getCache')->willReturn($cache);
 		$service = $this->getMock(
 			'FluidTYPO3\\Fluidcontent\\Service\\ConfigurationService',
@@ -233,11 +236,65 @@ class ConfigurationServiceTest extends UnitTestCase {
 			array(), '', FALSE
 		);
 		$service->expects($this->never())->method('getTypoScriptTemplatesInRootline');
-		$service->expects($this->once())->method('getAllRootTypoScriptTemplates')->willReturn(array());
+		$service->expects($this->once())->method('renderPageTypoScriptForPageUid')->willReturn($expectedValue);
+		$service->expects($this->once())->method('getAllRootTypoScriptTemplates')->willReturn(array(1));
 
 		$service->injectConfigurationManager($this->getMock('FluidTYPO3\Flux\Configuration\ConfigurationManager'));
 		$service->injectCacheManager($manager);
-		$service->getPageTsConfig();
+		$returnedValue = $service->getPageTsConfig();
+
+		$this->assertEquals($expectedValue, $returnedValue);
+	}
+
+	/**
+	 * @test
+	 */
+	public function testGetPageTsConfigFetchesRootTypoScriptIfCacheUnavailable() {
+		$expectedValue = 'This will be fetched.';
+		$manager = $this->getMock('TYPO3\\CMS\\Core\\Cache\\CacheManager', array('hasCache', 'getCache'));
+		$manager->expects($this->once())->method('hasCache')->willReturn(FALSE);
+		$manager->expects($this->never())->method('getCache')->willThrowException(new \TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException());
+		$service = $this->getMock(
+			'FluidTYPO3\\Fluidcontent\\Service\\ConfigurationService',
+			array('getAllRootTypoScriptTemplates', 'renderPageTypoScriptForPageUid', 'getTypoScriptTemplatesInRootline'),
+			array(), '', FALSE
+		);
+		$service->expects($this->never())->method('getTypoScriptTemplatesInRootline');
+		$service->expects($this->once())->method('renderPageTypoScriptForPageUid')->willReturn($expectedValue);
+		$service->expects($this->once())->method('getAllRootTypoScriptTemplates')->willReturn(array(1));
+
+		$service->injectConfigurationManager($this->getMock('FluidTYPO3\Flux\Configuration\ConfigurationManager'));
+		$service->injectCacheManager($manager);
+		$returnedValue = $service->getPageTsConfig();
+
+		$this->assertEquals($expectedValue, $returnedValue);
+	}
+
+	/**
+	 * @test
+	 */
+	public function testGetPageTsConfigUsesCachedRootTypoScriptIfAvailable() {
+		$cachedValue = 'this has been cached';
+		$cache = $this->getMock('TYPO3\\CMS\\Core\\Cache\\Frontend\\VariableFrontend', array('has', 'set', 'get'), array(), '', FALSE);
+		$cache->expects($this->once())->method('has')->with($this->equalTo(self::CACHE_KEY_PAGETSCONFIG))->willReturn(TRUE);
+		$cache->expects($this->never())->method('set');
+		$cache->expects($this->once())->method('get')->with($this->equalTo(self::CACHE_KEY_PAGETSCONFIG))->willReturn($cachedValue);
+		$manager = $this->getMock('TYPO3\\CMS\\Core\\Cache\\CacheManager', array('hasCache', 'getCache'));
+		$manager->expects($this->once())->method('hasCache')->willReturn(TRUE);
+		$manager->expects($this->once())->method('getCache')->willReturn($cache);
+		$service = $this->getMock(
+			'FluidTYPO3\\Fluidcontent\\Service\\ConfigurationService',
+			array('getAllRootTypoScriptTemplates', 'renderPageTypoScriptForPageUid', 'getTypoScriptTemplatesInRootline'),
+			array(), '', FALSE
+		);
+		$service->expects($this->never())->method('getTypoScriptTemplatesInRootline');
+		$service->expects($this->never())->method('getAllRootTypoScriptTemplates');
+
+		$service->injectConfigurationManager($this->getMock('FluidTYPO3\Flux\Configuration\ConfigurationManager'));
+		$service->injectCacheManager($manager);
+		$returnedValue = $service->getPageTsConfig();
+
+		$this->assertEquals($cachedValue, $returnedValue);
 	}
 
 }
