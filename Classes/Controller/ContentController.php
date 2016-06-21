@@ -13,6 +13,7 @@ namespace FluidTYPO3\Fluidcontent\Controller;
  *
  * @route off
  */
-class ContentController extends AbstractContentController implements ContentControllerInterface {
+class ContentController extends AbstractContentController implements ContentControllerInterface
+{
 
 }

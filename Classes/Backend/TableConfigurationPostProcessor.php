@@ -18,23 +18,25 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * @package Fluidcontent
  * @subpackage Backend
  */
-class TableConfigurationPostProcessor implements TableConfigurationPostProcessingHookInterface {
+class TableConfigurationPostProcessor implements TableConfigurationPostProcessingHookInterface
+{
 
-	/**
-	 * @return void
-	 */
-	public function processData() {
-		ExtensionManagementUtility::addPageTSConfig($this->getConfigurationService()->getPageTsConfig());
-	}
+    /**
+     * @return void
+     */
+    public function processData()
+    {
+        ExtensionManagementUtility::addPageTSConfig($this->getConfigurationService()->getPageTsConfig());
+    }
 
-	/**
-	 * @return ConfigurationService
-	 */
-	protected function getConfigurationService() {
-		/** @var ConfigurationService $configurationService */
-		$configurationService = GeneralUtility::makeInstance('TYPO3\CMS\Extbase\Object\ObjectManager')
-			->get('FluidTYPO3\Fluidcontent\Service\ConfigurationService');
-		return $configurationService;
-	}
-
+    /**
+     * @return ConfigurationService
+     */
+    protected function getConfigurationService()
+    {
+        /** @var ConfigurationService $configurationService */
+        $configurationService = GeneralUtility::makeInstance('TYPO3\CMS\Extbase\Object\ObjectManager')
+            ->get('FluidTYPO3\Fluidcontent\Service\ConfigurationService');
+        return $configurationService;
+    }
 }

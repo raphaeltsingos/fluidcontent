@@ -18,6 +18,7 @@ use TYPO3\CMS\Extbase\Mvc\Controller\ControllerInterface;
  *
  * @route off
  */
-interface ContentControllerInterface extends ControllerInterface {
+interface ContentControllerInterface extends ControllerInterface
+{
 
 }
