@@ -1,60 +1,43 @@
 <?php
-/***************************************************************
- *  Copyright notice
+namespace FluidTYPO3\Fluidcontent\Controller;
+
+/*
+ * This file is part of the FluidTYPO3/Fluidcontent project under GPLv2 or later.
  *
- *  (c) 2013 Claus Due <claus@wildside.dk>, Wildside A/S
- *
- *  All rights reserved
- *
- *  This script is part of the TYPO3 project. The TYPO3 project is
- *  free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  The GNU General Public License can be found at
- *  http://www.gnu.org/copyleft/gpl.html.
- *
- *  This script is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  This copyright notice MUST APPEAR in all copies of the script!
- ***************************************************************/
+ * For the full copyright and license information, please read the
+ * LICENSE.md file that was distributed with this source code.
+ */
+
+use FluidTYPO3\Fluidcontent\Service\ConfigurationService;
+use FluidTYPO3\Flux\Controller\AbstractFluxController;
+use FluidTYPO3\Flux\Utility\RecursiveArrayUtility;
+use TYPO3\CMS\Extbase\Mvc\View\ViewInterface;
 
 /**
  * Abstract Content Controller
  *
- * @package Fluidcontent
- * @subpackage Controller
  * @route off
  */
-abstract class Tx_Fluidcontent_Controller_AbstractContentController extends Tx_Flux_Controller_AbstractFluxController implements Tx_Fluidcontent_Controller_ContentControllerInterface {
+abstract class AbstractContentController extends AbstractFluxController implements ContentControllerInterface {
 
 	/**
-	 * @var string
+	 * @var ConfigurationService
 	 */
-	protected $fallbackExtensionKey = 'fluidcontent';
+	protected $contentConfigurationService;
 
 	/**
-	 * @var Tx_Fluidcontent_Service_ConfigurationService
-	 */
-	protected $configurationService;
-
-	/**
-	 * @param Tx_Fluidcontent_Service_ConfigurationService $configurationService
+	 * @param ConfigurationService $configurationService
 	 * @return void
 	 */
-	public function injectConfigurationService(Tx_Fluidcontent_Service_ConfigurationService $configurationService) {
-		$this->configurationService = $configurationService;
+	public function injectContentConfigurationService(ConfigurationService $configurationService) {
+		$this->contentConfigurationService = $configurationService;
 	}
 
 	/**
-	 * @param Tx_Extbase_MVC_View_ViewInterface $view
+	 * @param ViewInterface $view
 	 * @return void
 	 */
-	public function initializeView(Tx_Extbase_MVC_View_ViewInterface $view) {
+	public function initializeView(ViewInterface $view) {
 		parent::initializeView($view);
 		$view->assign('page', $GLOBALS['TSFE']->page);
 		$view->assign('user', $GLOBALS['TSFE']->fe_user->user);
@@ -64,4 +47,23 @@ abstract class Tx_Fluidcontent_Controller_AbstractContentController extends Tx_F
 		$view->assign('session', $_SESSION);
 	}
 
+	/**
+	 * @return void
+	 */
+	protected function initializeViewVariables() {
+		$row = $this->getRecord();
+		$form = $this->provider->getForm($row);
+		$generalSettings = $this->contentConfigurationService->convertFlexFormContentToArray($row['pi_flexform'], $form);
+		$this->settings = RecursiveArrayUtility::merge($this->settings, $generalSettings, FALSE, FALSE);
+		// Add fluidcontent_core form settings (to avoid flux:form.data in templates)
+		if (FALSE === empty($row['content_options'])) {
+			$contentSettings = $this->contentConfigurationService->convertFlexFormContentToArray($row['content_options'], $form);
+			if (FALSE === isset($this->settings['content'])) {
+				$this->settings['content'] = $contentSettings;
+			} else {
+				$this->settings['content'] = RecursiveArrayUtility::merge($this->settings['content'], $contentSettings);
+			}
+		}
+		parent::initializeViewVariables();
+	}
 }
