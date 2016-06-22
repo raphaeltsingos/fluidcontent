@@ -345,14 +345,7 @@ class ConfigurationService extends FluxService implements SingletonInterface {
 			$icon = substr($icon, 2);
 		}
 
-		if (TRUE === method_exists('FluidTYPO3\\Flux\\Utility\\MiscellaneousUtility', 'createIcon')) {
-			if ('/' === $icon[0]) {
-				$icon = realpath(PATH_site . $icon);
-			}
-			if (TRUE === file_exists($icon)) {
-				$icon = '../..' . MiscellaneousUtility::createIcon($icon, $this->extConf['iconWidth'], $this->extConf['iconHeight']);
-			}
-		}
+		$icon = '../' . $icon;
 
 		return sprintf('
 			mod.wizards.newContentElement.wizardItems.%s.elements.%s {
