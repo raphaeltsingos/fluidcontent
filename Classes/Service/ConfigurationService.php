@@ -48,6 +48,11 @@ class ConfigurationService extends FluxService implements SingletonInterface
     const ICON_HEIGHT = '24m';
 
     /**
+     * Cache tag for all icons
+     */
+    const ICON_CACHE_TAG = 'icon';
+
+    /**
      * @var array
      */
     protected $extConf;
@@ -173,6 +178,11 @@ class ConfigurationService extends FluxService implements SingletonInterface
         if ($cachedPageTsConfigExists) {
             // just use the cached PageTSConfig if available
             $pageTsConfig = $cache->get('pageTsConfig');
+            // load all cached icons and register them them IconRegistry because it won't do it automatically
+            $iconRegistry = GeneralUtility::makeInstance(IconRegistry::class);
+            foreach ($cache->getByTag(self::ICON_CACHE_TAG) as $iconIdentifier => $entry) {
+                $iconRegistry->registerIcon($entry['identifier'], $entry['provider'], $entry);
+            }
         } else {
             // PageTSConfig is not yet available from cache, get it now
             $templates = $this->getAllRootTypoScriptTemplates();
@@ -494,9 +504,24 @@ class ConfigurationService extends FluxService implements SingletonInterface
                     default:
                         $iconProvider = BitmapIconProvider::class;
                 }
-                $iconIdentifier = 'fluidcontent-' . $id;
+                $iconIdentifier = 'icon-fluidcontent-' . $id;
                 $iconRegistry = GeneralUtility::makeInstance(IconRegistry::class);
                 $iconRegistry->registerIcon($iconIdentifier, $iconProvider, ['source' => $icon]);
+
+                $cacheExists = $this->manager->hasCache('fluidcontent');
+                if ($this->manager->hasCache('fluidcontent')) {
+                    $this->manager->getCache('fluidcontent')->set(
+                        $iconIdentifier,
+                        [
+                            'provider' => $iconProvider,
+                            'source' => $icon,
+                            'identifier' => $iconIdentifier
+                        ],
+                        [
+                            self::ICON_CACHE_TAG
+                        ]
+                    );
+                }
             }
         }
         $defaultValues = [];
