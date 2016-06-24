@@ -231,11 +231,6 @@ class ConfigurationService extends FluxService implements SingletonInterface
             $pageTsConfig .= '[PIDinRootline = ' . strval($pageUid) . ']' . LF;
             $pageTsConfig .= $collectionPageTsConfig . LF;
             $pageTsConfig .= '[GLOBAL]' . LF;
-            $this->message(
-                'Built content setup for page ' . $pageUid,
-                GeneralUtility::SYSLOG_SEVERITY_INFO,
-                'Fluidcontent'
-            );
         } catch (\RuntimeException $error) {
             $this->debug($error);
         }
