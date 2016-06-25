@@ -175,15 +175,13 @@ class ConfigurationServiceTest extends UnitTestCase
                 'overrideCurrentPageUidForConfigurationManager',
                 'getContentConfiguration',
                 'buildAllWizardTabGroups',
-                'buildAllWizardTabsPageTsConfig',
-                'message'
+                'buildAllWizardTabsPageTsConfig'
             )
         );
         $instance->expects($this->at(0))->method('overrideCurrentPageUidForConfigurationManager')->with($pageUid);
         $instance->expects($this->at(1))->method('getContentConfiguration')->willReturn(array('foo' => 'bar'));
         $instance->expects($this->at(2))->method('buildAllWizardTabGroups')->with(array('foo' => 'bar'))->willReturn(array());
         $instance->expects($this->at(3))->method('buildAllWizardTabsPageTsConfig')->with(array())->willReturn('targetmarker');
-        $instance->expects($this->at(4))->method('message');
         $result = $this->callInaccessibleMethod($instance, 'renderPageTypoScriptForPageUid', $pageUid);
         $this->assertContains('targetmarker', $result);
     }
@@ -297,10 +295,11 @@ class ConfigurationServiceTest extends UnitTestCase
     public function testGetPageTsConfigUsesCachedRootTypoScriptIfAvailable()
     {
         $cachedValue = 'this has been cached';
-        $cache = $this->getMock('TYPO3\\CMS\\Core\\Cache\\Frontend\\VariableFrontend', array('has', 'set', 'get'), array(), '', false);
-        $cache->expects($this->once())->method('has')->with($this->equalTo(self::CACHE_KEY_PAGETSCONFIG))->willReturn(true);
+        $cache = $this->getMock('TYPO3\\CMS\\Core\\Cache\\Frontend\\VariableFrontend', array('has', 'set', 'get', 'getByTag'), array(), '', false);
+        $cache->expects($this->once())->method('has')->with(self::CACHE_KEY_PAGETSCONFIG)->willReturn(true);
         $cache->expects($this->never())->method('set');
-        $cache->expects($this->once())->method('get')->with($this->equalTo(self::CACHE_KEY_PAGETSCONFIG))->willReturn($cachedValue);
+        $cache->expects($this->once())->method('get')->with(self::CACHE_KEY_PAGETSCONFIG)->willReturn($cachedValue);
+        $cache->expects($this->once())->method('getByTag')->with(ConfigurationService::ICON_CACHE_TAG)->willReturn(array());
         $manager = $this->getMock('TYPO3\\CMS\\Core\\Cache\\CacheManager', array('hasCache', 'getCache'));
         $manager->expects($this->once())->method('hasCache')->willReturn(true);
         $manager->expects($this->once())->method('getCache')->willReturn($cache);
