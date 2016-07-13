@@ -9,12 +9,18 @@ namespace FluidTYPO3\Fluidcontent\Tests\Unit\Provider;
  */
 
 use FluidTYPO3\Fluidcontent\Provider\ContentProvider;
+use FluidTYPO3\Fluidcontent\Service\ConfigurationService;
 use FluidTYPO3\Flux\Configuration\BackendConfigurationManager;
+use FluidTYPO3\Flux\Configuration\ConfigurationManager;
 use FluidTYPO3\Flux\Service\FluxService;
+use FluidTYPO3\Flux\Service\WorkspacesAwareRecordService;
 use TYPO3\CMS\Core\Database\DatabaseConnection;
+use TYPO3\CMS\Core\Database\PreparedStatement;
 use TYPO3\CMS\Core\Tests\UnitTestCase;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
+use TYPO3\CMS\Extbase\Object\ObjectManager;
 
 /**
  * Class ContentProviderTest
@@ -27,27 +33,19 @@ class ContentProviderTest extends UnitTestCase
      */
     protected function createProviderInstance()
     {
-        $GLOBALS['TYPO3_DB'] = $this->getMock(
-            'TYPO3\\CMS\\Core\\Database\\DatabaseConnection',
-            array('prepare_SELECTquery', 'exec_SELECTgetSingleRow', 'exec_SELECTgetRows', 'exec_SELECTquery'),
-            array(),
-            '',
-            false
-        );
-        $preparedStatementMock = $this->getMock(
-            'TYPO3\\CMS\\Core\\Database\\PreparedStatement',
-            array('execute', 'fetch', 'free'),
-            array(),
-            '',
-            false
-        );
+        $GLOBALS['TYPO3_DB'] = $this->getMockBuilder(DatabaseConnection::class)
+            ->setMethods(['prepare_SELECTquery', 'exec_SELECTgetSingleRow', 'exec_SELECTgetRows', 'exec_SELECTquery'])
+            ->disableOriginalConstructor()
+            ->getMock();
+        $preparedStatementMock = $this->getMockBuilder(PreparedStatement::class)
+            ->setMethods(['execute', 'fetch', 'free'])
+            ->disableOriginalConstructor()
+            ->getMock();
         $preparedStatementMock->expects($this->any())->method('execute')->willReturn(false);
         $preparedStatementMock->expects($this->any())->method('free');
         $preparedStatementMock->expects($this->any())->method('fetch')->willReturn(false);
-        ;
         $GLOBALS['TYPO3_DB']->expects($this->any())->method('prepare_SELECTquery')->willReturn($preparedStatementMock);
-        $instance = GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager')
-            ->get('FluidTYPO3\\Fluidcontent\\Provider\\ContentProvider');
+        $instance = GeneralUtility::makeInstance(ObjectManager::class)->get(ContentProvider::class);
         return $instance;
     }
 
@@ -58,12 +56,12 @@ class ContentProviderTest extends UnitTestCase
     {
         $instance = $this->createProviderInstance();
         $this->assertAttributeInstanceOf(
-            'TYPO3\\CMS\\Extbase\\Configuration\\ConfigurationManagerInterface',
+            ConfigurationManagerInterface::class,
             'configurationManager',
             $instance
         );
         $this->assertAttributeInstanceOf(
-            'FluidTYPO3\\Fluidcontent\\Service\\ConfigurationService',
+            ConfigurationService::class,
             'contentConfigurationService',
             $instance
         );
@@ -76,7 +74,7 @@ class ContentProviderTest extends UnitTestCase
      */
     public function testGetTemplatePathAndFilename(array $record, $expected)
     {
-        $GLOBALS['TYPO3_LOADED_EXT'] = array();
+        $GLOBALS['TYPO3_LOADED_EXT'] = [];
         $instance = $this->createProviderInstance();
         $result = $instance->getTemplatePathAndFilename($record);
         $this->assertEquals($expected, $result);
@@ -89,11 +87,11 @@ class ContentProviderTest extends UnitTestCase
     {
         $path = ExtensionManagementUtility::extPath('fluidcontent');
         $file = $path . 'Resources/Private/Templates/Content/Error.html';
-        return array(
-            array(array('uid' => 0), $file),
-            array(array('tx_fed_fcefile' => 'test:Error.html'), null),
-            array(array('tx_fed_fcefile' => 'fluidcontent:Error.html'), $file),
-        );
+        return [
+            [['uid' => 0], $file],
+            [['tx_fed_fcefile' => 'test:Error.html'], null],
+            [['tx_fed_fcefile' => 'fluidcontent:Error.html'], $file],
+        ];
     }
 
     /**
@@ -105,7 +103,7 @@ class ContentProviderTest extends UnitTestCase
     {
         $instance = $this->createProviderInstance();
         $instance->setTemplatePathAndFilename($template);
-        $result = $instance->getTemplatePathAndFilename(array());
+        $result = $instance->getTemplatePathAndFilename([]);
         $this->assertEquals($expected, $result);
     }
 
@@ -115,20 +113,20 @@ class ContentProviderTest extends UnitTestCase
     public function getTemplatePathAndFilenameOverrideTestValues()
     {
         $path = ExtensionManagementUtility::extPath('fluidcontent');
-        return array(
-            array(
+        return [
+            [
                 'EXT:fluidcontent/Resources/Private/Templates/Content/Error.html',
                 $path . 'Resources/Private/Templates/Content/Error.html',
-            ),
-            array(
+            ],
+            [
                 $path . 'Resources/Private/Templates/Content/Error.html',
                 $path . 'Resources/Private/Templates/Content/Error.html',
-            ),
-            array(
+            ],
+            [
                 $path . '/Does/Not/Exist.html',
                 null,
-            )
-        );
+            ]
+        ];
     }
 
     /**
@@ -148,10 +146,10 @@ class ContentProviderTest extends UnitTestCase
      */
     public function getControllerExtensionKeyFromRecordTestValues()
     {
-        return array(
-            array(array('uid' => 0), 'Fluidcontent'),
-            array(array('tx_fed_fcefile' => 'test:test'), 'test'),
-        );
+        return [
+            [['uid' => 0], 'Fluidcontent'],
+            [['tx_fed_fcefile' => 'test:test'], 'test'],
+        ];
     }
 
     /**
@@ -171,10 +169,10 @@ class ContentProviderTest extends UnitTestCase
      */
     public function getControllerActionFromRecordTestValues()
     {
-        return array(
-            array(array('uid' => 0), 'error'),
-            array(array('tx_fed_fcefile' => 'test:test'), 'test'),
-        );
+        return [
+            [['uid' => 0], 'error'],
+            [['tx_fed_fcefile' => 'test:test'], 'test'],
+        ];
     }
 
     /**
@@ -194,11 +192,11 @@ class ContentProviderTest extends UnitTestCase
      */
     public function getPriorityTestValues()
     {
-        return array(
-            array(array('uid' => 0), 0),
-            array(array('tx_fed_fcefile' => 'test:test'), 0),
-            array(array('tx_fed_fcefile' => 'test:test', 'CType' => 'fluidcontent_content'), 100),
-        );
+        return [
+            [['uid' => 0], 0],
+            [['tx_fed_fcefile' => 'test:test'], 0],
+            [['tx_fed_fcefile' => 'test:test', 'CType' => 'fluidcontent_content'], 100],
+        ];
     }
 
     /**
@@ -213,7 +211,7 @@ class ContentProviderTest extends UnitTestCase
     public function testGetPreviewForTextElement($record, $expected)
     {
         $instance = $this->createProviderInstance();
-        $recordService = $this->getMock('FluidTYPO3\\Flux\\Service\\WorkspacesAwareRecordService', array('get'));
+        $recordService = $this->getMockBuilder(WorkspacesAwareRecordService::class)->setMethods(['get'])->getMock();
         $instance->injectRecordService($recordService);
         $result = $instance->getPreview($record);
         $this->assertEquals($expected, $result);
@@ -221,28 +219,28 @@ class ContentProviderTest extends UnitTestCase
 
     public function getPreviewTestValues()
     {
-        return array(
-            array(
-                array(
+        return [
+            [
+                [
                     'uid' => 1,
                     'CType' => 'text',
                     'header' => 'this is a simple text element',
                     'tx_fed_tcefile' => 'dummy-fed-file.txt'
-                ),
-                array(
+                ],
+                [
                     null,
                     null,
                     true
-                )
-            ),
-            array(
-                array(
+                ]
+            ],
+            [
+                [
                     'uid' => 1,
                     'CType' => 'fluidcontent_content',
                     'header' => 'this is a simple text element',
                     'tx_fed_tcefile' => 'dummy-fed-file.txt'
-                ),
-                array(
+                ],
+                [
                     null,
                     '<div class="alert alert-warning">
 		<div class="media">
@@ -262,8 +260,8 @@ class ContentProviderTest extends UnitTestCase
 		</div>
 	</div>',
                     false
-                )
-            )
-        );
+                ]
+            ]
+        ];
     }
 }

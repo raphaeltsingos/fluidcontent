@@ -25,29 +25,28 @@ class ContentControllerTest extends UnitTestCase
     {
 
         /** @var ContentController|\PHPUnit_Framework_MockObject_MockObject $instance */
-        $instance = $this->getMock(
-            'FluidTYPO3\\Fluidcontent\\Controller\\ContentController',
-            array(
-                'getRecord', 'initializeProvider', 'initializeSettings', 'initializeOverriddenSettings',
-                'initializeViewObject', 'initializeViewVariables'
-            )
-        );
+        $instance = $this->getMockBuilder(ContentController::class)
+            ->setMethods(
+                [
+                    'getRecord', 'initializeProvider', 'initializeSettings', 'initializeOverriddenSettings',
+                    'initializeViewObject', 'initializeViewVariables'
+                ]
+            )->getMock();
         /** @var ConfigurationManager|\PHPUnit_Framework_MockObject_MockObject $configurationManager */
-        $configurationManager = $this->getMock(
-            'TYPO3\\CMS\\Extbase\\Configuration\\ConfigurationManager',
-            array('getContentObject', 'getConfiguration')
-        );
+        $configurationManager = $this->getMockBuilder(ConfigurationManager::class)
+            ->setMethods(['getContentObject', 'getConfiguration'])
+            ->getMock();
         $contentObject = new \stdClass();
         $configurationManager->expects($this->once())->method('getContentObject')->willReturn($contentObject);
-        $configurationManager->expects($this->once())->method('getConfiguration')->willReturn(array('foo' => 'bar'));
-        $instance->expects($this->once())->method('getRecord')->willReturn(array('uid' => 0));
-        $GLOBALS['TSFE'] = (object) array('page' => 'page', 'fe_user' => (object) array('user' => 'user'));
+        $configurationManager->expects($this->once())->method('getConfiguration')->willReturn(['foo' => 'bar']);
+        $instance->expects($this->once())->method('getRecord')->willReturn(['uid' => 0]);
+        $GLOBALS['TSFE'] = (object) ['page' => 'page', 'fe_user' => (object) ['user' => 'user']];
         /** @var StandaloneView|\PHPUnit_Framework_MockObject_MockObject $view */
-        $view = $this->getMock('TYPO3\\CMS\\Fluid\\View\\StandaloneView', array('assign'));
+        $view = $this->getMockBuilder(StandaloneView::class)->setMethods(['assign'])->getMock();
         $instance->injectConfigurationManager($configurationManager);
         $view->expects($this->at(0))->method('assign')->with('page', 'page');
         $view->expects($this->at(1))->method('assign')->with('user', 'user');
-        $view->expects($this->at(2))->method('assign')->with('record', array('uid' => 0));
+        $view->expects($this->at(2))->method('assign')->with('record', ['uid' => 0]);
         $view->expects($this->at(3))->method('assign')->with('contentObject', $contentObject);
         $view->expects($this->at(4))->method('assign')->with('cookies', $_COOKIE);
         $view->expects($this->at(5))->method('assign')->with('session', $_SESSION);

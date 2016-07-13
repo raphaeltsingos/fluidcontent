@@ -9,6 +9,7 @@ namespace FluidTYPO3\Fluidcontent\Tests\Unit\Backend;
  */
 
 use FluidTYPO3\Fluidcontent\Backend\TableConfigurationPostProcessor;
+use FluidTYPO3\Fluidcontent\Service\ConfigurationService;
 use TYPO3\CMS\Core\Tests\UnitTestCase;
 
 /**
@@ -24,7 +25,7 @@ class TableConfigurationPostProcessorTest extends UnitTestCase
     {
         $instance = new TableConfigurationPostProcessor();
         $result = $this->callInaccessibleMethod($instance, 'getConfigurationService');
-        $this->assertInstanceOf('FluidTYPO3\Fluidcontent\Service\ConfigurationService', $result);
+        $this->assertInstanceOf(ConfigurationService::class, $result);
     }
 
     /**
@@ -32,9 +33,9 @@ class TableConfigurationPostProcessorTest extends UnitTestCase
      */
     public function testProcessData()
     {
-        $service = $this->getMock('FluidTYPO3\Fluidcontent\Service\ConfigurationService', array('getPageTsConfig'));
+        $service = $this->getMockBuilder(ConfigurationService::class)->setMethods(['getPageTsConfig'])->getMock();
         $service->expects($this->once())->method('getPageTsConfig')->willReturn('');
-        $instance = $this->getMock('FluidTYPO3\Fluidcontent\Backend\TableConfigurationPostProcessor', array('getConfigurationService'));
+        $instance = $this->getMockBuilder(TableConfigurationPostProcessor::class)->setMethods(['getConfigurationService'])->getMock();
         $instance->expects($this->once())->method('getConfigurationService')->willReturn($service);
         $instance->processData();
     }
