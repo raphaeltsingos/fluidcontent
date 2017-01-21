@@ -351,6 +351,9 @@ class ConfigurationService extends FluxService implements SingletonInterface
                         $fileRelPath = $actionName . '.html';
                         $viewContext->setTemplatePathAndFilename($templateFilename);
                         $form = $this->getFormFromTemplateFile($viewContext);
+                        if ($form->getOption('Fluidcontent.hidden')) {
+                            continue;
+                        }
                         if (empty($form) || !$form->getEnabled()) {
                             $this->sendDisabledContentWarning($templateFilename);
                             continue;
