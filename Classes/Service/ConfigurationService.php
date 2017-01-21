@@ -388,7 +388,9 @@ class ConfigurationService extends FluxService implements SingletonInterface
         foreach ($types as $extension => $forms) {
             foreach ($forms as $form) {
                 $groupName = $form->getOption('group') ?: $extension;
-                $groups[$groupName][$this->translateLabel($form->getLabel(), '')] = $form;
+                $label = $form->getLabel();
+                $translatedLabel = $this->translateLabel($label, '') ?? $label;
+                $groups[$groupName][$translatedLabel] = $form;
             }
         }
         $items = [];
@@ -566,7 +568,7 @@ class ConfigurationService extends FluxService implements SingletonInterface
      * @param string $key
      * @param string $extensionName
      * @param array $arguments
-     * @return string
+     * @return string|null
      */
     protected function translateLabel($key, $extensionName, $arguments = [])
     {
