@@ -22,6 +22,7 @@ use TYPO3\CMS\Core\Imaging\IconProvider\BitmapIconProvider;
 use TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider;
 use TYPO3\CMS\Core\Imaging\IconRegistry;
 use TYPO3\CMS\Core\SingletonInterface;
+use TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
@@ -205,8 +206,7 @@ class ConfigurationService extends FluxService implements SingletonInterface
         $this->overrideCurrentPageUidForConfigurationManager($pageUid);
         $pageTsConfig = '';
         try {
-            $collection = $this->getContentConfiguration();
-            $wizardTabs = $this->buildAllWizardTabGroups($collection);
+            $wizardTabs = $this->buildAllWizardTabGroups();
             $collectionPageTsConfig = $this->buildAllWizardTabsPageTsConfig($wizardTabs);
             $pageTsConfig .= '[PIDinRootline = ' . strval($pageUid) . ']' . LF;
             $pageTsConfig .= $collectionPageTsConfig . LF;
@@ -287,14 +287,11 @@ class ConfigurationService extends FluxService implements SingletonInterface
     }
 
     /**
-     * Scans all folders in $allTemplatePaths for template
-     * files, reads information about each file and collects
-     * the groups of files into groups of pageTSconfig setup.
+     * Scans all folders in registered provider extensions for Form instances.
      *
-     * @param array $allTemplatePaths
      * @return array
      */
-    protected function buildAllWizardTabGroups($allTemplatePaths)
+    protected function buildAllWizardTabGroups()
     {
         $wizardTabs = [];
         $forms = $this->getContentElementFormInstances();
@@ -304,27 +301,19 @@ class ConfigurationService extends FluxService implements SingletonInterface
                 /** @var Form $form */
                 $group = $form->getOption(Form::OPTION_GROUP);
                 if (true === empty($group)) {
-                    $group = 'Content';
+                    $group = 'common';
                 }
                 $sanitizedGroup = $this->sanitizeString($group);
                 $tabId = $group === $sanitizedGroup ? $group : 'group_' . $sanitizedGroup;
-                $wizardTabs[$tabId]['title'] = $group;
-                $wizardTabs[$tabId]['title'] = $this->translateLabel(
-                    'fluidcontent.newContentWizard.group.' . $group,
-                    ExtensionNamingUtility::getExtensionKey($extensionKey)
-                );
-                if ($wizardTabs[$tabId]['title'] === null) {
-                    $coreTranslationReference =
-                        'LLL:EXT:backend/Resources/Private/Language/locallang_db_new_content_el.xlf:' . $group;
-                    $wizardTabs[$tabId]['title'] = $this->translateLabel($coreTranslationReference, 'backend');
-                    if (!$wizardTabs[$tabId]['title'] || $coreTranslationReference == $wizardTabs[$tabId]['title']) {
-                        $wizardTabs[$tabId]['title'] = $group;
-                    }
+                if (!isset($wizardTabs[$tabId]['title'])) {
+                    $wizardTabs[$tabId]['title'] = $this->translateLabel(
+                        'fluidcontent.newContentWizard.group.' . $group,
+                        ExtensionNamingUtility::getExtensionKey($extensionKey)
+                    ) ?? $tabId;
                 }
                 $contentElementId = $form->getOption('contentElementId');
                 $elementTsConfig = $this->buildWizardTabItem($tabId, $id, $form, $contentElementId);
                 $wizardTabs[$tabId]['elements'][$id] = $elementTsConfig;
-                $wizardTabs[$tabId]['key'] = $extensionKey;
             }
         }
         return $wizardTabs;
@@ -389,8 +378,7 @@ class ConfigurationService extends FluxService implements SingletonInterface
             foreach ($forms as $form) {
                 $groupName = $form->getOption('group') ?: $extension;
                 $label = $form->getLabel();
-                $translatedLabel = $this->translateLabel($label, '') ?? $label;
-                $groups[$groupName][$translatedLabel] = $form;
+                $groups[$groupName][$label] = $form;
             }
         }
         $items = [];
@@ -425,6 +413,8 @@ class ConfigurationService extends FluxService implements SingletonInterface
      */
     protected function buildAllWizardTabsPageTsConfig($wizardTabs)
     {
+        $existingItems = $this->getExistingNewContentWizardItems();
+
         $pageTsConfig = '';
         foreach ($wizardTabs as $tab) {
             foreach ($tab['elements'] as $elementTsConfig) {
@@ -434,17 +424,15 @@ class ConfigurationService extends FluxService implements SingletonInterface
         foreach ($wizardTabs as $tabId => $tab) {
             $pageTsConfig .= sprintf(
                 '
-				mod.wizards.newContentElement.wizardItems.%s {
-					header = %s
-					show := addToList(%s)
-					position = 0
-					key = %s
-				}
-				',
+                mod.wizards.newContentElement.wizardItems.%s.header = %s
+                mod.wizards.newContentElement.wizardItems.%s.show := addToList(%s)
+                mod.wizards.newContentElement.wizardItems.%s.position = 0
+                ',
                 $tabId,
-                $tab['title'],
+                !empty($existingItems[$tabId]['header']) ? $existingItems[$tabId]['header'] : $tabId,
+                $tabId,
                 implode(',', array_keys($tab['elements'])),
-                $tab['key']
+                $tabId
             );
         }
         return $pageTsConfig;
@@ -573,5 +561,33 @@ class ConfigurationService extends FluxService implements SingletonInterface
     protected function translateLabel($key, $extensionName, $arguments = [])
     {
         return LocalizationUtility::translate($key, $extensionName, $arguments);
+    }
+
+    /**
+     * @return array
+     */
+    protected function getExistingNewContentWizardItems()
+    {
+        static $pageTSconfig;
+        if (!isset($pageTSconfig)) {
+            $parser = $this->getTypoScriptParser();
+            $config = $GLOBALS['TYPO3_CONF_VARS']['BE']['defaultPageTSconfig'];
+            $inclusions = $parser::checkIncludeLines($config, 1, true);
+            $config .= $inclusions['typoscript'];
+            foreach ($inclusions['files'] as $include) {
+                $config .= file_get_contents($include);
+            }
+            $parser->parse($config);
+            $pageTSconfig = GeneralUtility::removeDotsFromTS($parser->setup['mod.']['wizards.']['newContentElement.']['wizardItems.']);
+        }
+        return $pageTSconfig;
+    }
+
+    /**
+     * @return TypoScriptParser
+     */
+    protected function getTypoScriptParser()
+    {
+        return new TypoScriptParser();
     }
 }
