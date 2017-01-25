@@ -351,11 +351,11 @@ class ConfigurationService extends FluxService implements SingletonInterface
                         $fileRelPath = $actionName . '.html';
                         $viewContext->setTemplatePathAndFilename($templateFilename);
                         $form = $this->getFormFromTemplateFile($viewContext);
-                        if ($form->getOption('Fluidcontent.hidden')) {
-                            continue;
-                        }
                         if (empty($form) || !$form->getEnabled()) {
                             $this->sendDisabledContentWarning($templateFilename);
+                            continue;
+                        }
+                        if ($form->getOption('Fluidcontent.hidden')) {
                             continue;
                         }
                         $id = preg_replace('/[\.\/]/', '_', $registeredExtensionKey . '/' . $actionName . '.html');
@@ -419,11 +419,6 @@ class ConfigurationService extends FluxService implements SingletonInterface
         $existingItems = $this->getExistingNewContentWizardItems();
 
         $pageTsConfig = '';
-        foreach ($wizardTabs as $tab) {
-            foreach ($tab['elements'] as $elementTsConfig) {
-                $pageTsConfig .= $elementTsConfig;
-            }
-        }
         foreach ($wizardTabs as $tabId => $tab) {
             $pageTsConfig .= sprintf(
                 '
@@ -437,6 +432,9 @@ class ConfigurationService extends FluxService implements SingletonInterface
                 implode(',', array_keys($tab['elements'])),
                 $tabId
             );
+            foreach ($tab['elements'] as $elementTsConfig) {
+                $pageTsConfig .= $elementTsConfig;
+            }
         }
         return $pageTsConfig;
     }
@@ -581,7 +579,11 @@ class ConfigurationService extends FluxService implements SingletonInterface
                 $config .= file_get_contents($include);
             }
             $parser->parse($config);
-            $pageTSconfig = GeneralUtility::removeDotsFromTS($parser->setup['mod.']['wizards.']['newContentElement.']['wizardItems.']);
+            if (isset($parser->setup['mod.']['wizards.']['newContentElement.']['wizardItems.'])) {
+                $pageTSconfig = GeneralUtility::removeDotsFromTS($parser->setup['mod.']['wizards.']['newContentElement.']['wizardItems.']);
+            } else {
+                $pageTSconfig = [];
+            }
         }
         return $pageTSconfig;
     }

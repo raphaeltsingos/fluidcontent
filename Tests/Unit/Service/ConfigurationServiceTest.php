@@ -21,7 +21,6 @@ use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 use TYPO3\CMS\Extbase\Object\ObjectManager;
-use TYPO3\CMS\Frontend\Page\PageRepository;
 
 /**
  * Class ConfigurationServiceTest
@@ -81,11 +80,11 @@ class ConfigurationServiceTest extends UnitTestCase
                 )
             )
         );
-        $service = new ConfigurationService();
+        $service = $this->getMockBuilder(ConfigurationService::class)->setMethods(['getExistingNewContentWizardItems'])->getMock();
+        $service->expects($this->once())->method('getExistingNewContentWizardItems')->willReturn([]);
         $result = $this->callInaccessibleMethod($service, 'buildAllWizardTabsPageTsConfig', $tabs);
         foreach ($tabs as $tabId => $tab) {
             $this->assertContains($tabId, $result);
-            $this->assertContains($tab['title'], $result);
             $this->assertContains($tab['key'], $result);
         }
     }
@@ -177,45 +176,30 @@ class ConfigurationServiceTest extends UnitTestCase
         $mock->expects($this->once())->method('getContentConfiguration')->willReturn($paths);
         $mock->expects($this->exactly(2))->method('message');
         $result = $this->callInaccessibleMethod($mock, 'buildAllWizardTabGroups', $paths);
-        #var_dump($result);
-        $this->assertArrayHasKey('Content', $result);
-        $this->assertEquals('translated', $result['Content']['title']);
-        $this->assertArrayHasKey('fluidcontent_DummyContent_html', $result['Content']['elements']);
+        $this->assertNotEmpty($result['common']['title']);
+        $this->assertArrayHasKey('fluidcontent_DummyContent_html', $result['common']['elements']);
     }
 
     /**
-     * @dataProvider getTestRenderPageTypoScriptTestValues
-     * @param $pageUid
+     * @return void
      */
-    public function testRenderPageTypoScriptForPageUidCreatesExpectedTypoScript($pageUid)
+    public function testRenderPageTypoScriptForPageUidCreatesExpectedTypoScript()
     {
+        $pageUid = 1;
         $class = substr(str_replace('Tests\\Unit\\', '', get_class($this)), 0, -4);
         $instance = $this->getMockBuilder($class)
             ->setMethods(
                 array(
                     'overrideCurrentPageUidForConfigurationManager',
-                    'getContentConfiguration',
                     'buildAllWizardTabGroups',
                     'buildAllWizardTabsPageTsConfig'
                 )
             )->getMock();
-        $instance->expects($this->at(0))->method('overrideCurrentPageUidForConfigurationManager')->with($pageUid);
-        $instance->expects($this->at(1))->method('getContentConfiguration')->willReturn(array('foo' => 'bar'));
-        $instance->expects($this->at(2))->method('buildAllWizardTabGroups')->with(array('foo' => 'bar'))->willReturn(array());
-        $instance->expects($this->at(3))->method('buildAllWizardTabsPageTsConfig')->with(array())->willReturn('targetmarker');
+        $instance->expects($this->once())->method('overrideCurrentPageUidForConfigurationManager')->with($pageUid);
+        $instance->expects($this->once())->method('buildAllWizardTabGroups')->willReturn(array());
+        $instance->expects($this->once())->method('buildAllWizardTabsPageTsConfig')->willReturn('targetmarker');
         $result = $this->callInaccessibleMethod($instance, 'renderPageTypoScriptForPageUid', $pageUid);
         $this->assertContains('targetmarker', $result);
-    }
-
-    /**
-     * @return array
-     */
-    public function getTestRenderPageTypoScriptTestValues()
-    {
-        return array(
-            array(1),
-            array(2)
-        );
     }
 
     /**
