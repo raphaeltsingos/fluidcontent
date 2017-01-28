@@ -2,11 +2,12 @@
     "name": "fluidtypo3/fluidcontent",
     "description": "Create Flexible Content elements in pure fluid",
     "require": {
-        "fluidtypo3/flux": "*",
-        "php": ">=5.5.0"
+        "fluidtypo3/flux": "^7.3|^8.0|dev-development",
+        "typo3/cms": "^7.6|^8.4",
+        "php": ">=7.0.0"
     },
     "require-dev": {
-        "fluidtypo3/development": "*",
+        "fluidtypo3/development": "^3.0",
         "fluidtypo3/flux": "dev-development"
     },
     "autoload": {
@@ -18,7 +19,6 @@
     "keywords": ["TYPO3 CMS", "templating", "bootstrap", "flux", "fluidcontent", "fedext", "fluid"],
     "homepage": "https://fluidtypo3.org",
     "license": "GPL-2.0+",
-    "version": "4.4.1",
     "support": {
         "irc": "irc://irc.freenode.org/fedext",
         "issues": "https://github.com/FluidTYPO3/fluidcontent/issues"
