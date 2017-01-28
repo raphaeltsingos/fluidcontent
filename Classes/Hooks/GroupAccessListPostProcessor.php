@@ -14,22 +14,29 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 /**
  * Class GroupAccessListPostProcessor
  */
-class GroupAccessListPostProcessor {
+class GroupAccessListPostProcessor
+{
 
-	/**
-	 * @param array $parameters
-	 * @param BackendUserAuthentication $reference
-	 * @return void
-	 */
-	public function addAccessLists(array $parameters, BackendUserAuthentication $reference) {
-		$blacklist = array();
-		$whitelist = array();
-		foreach ($reference->userGroups as $groupData) {
-			$blacklist = array_merge($blacklist, GeneralUtility::trimExplode(',', $groupData['tx_fluidcontent_deniedfluidcontent']));
-			$whitelist = array_merge($whitelist, GeneralUtility::trimExplode(',', $groupData['tx_fluidcontent_allowedfluidcontent']));
-		}
-		$reference->dataLists['fluidcontentBlacklist'] = array_unique(array_diff($blacklist, array('')));
-		$reference->dataLists['fluidcontentWhitelist'] = array_unique(array_diff($whitelist, array('')));
-	}
-
+    /**
+     * @param array $parameters
+     * @param BackendUserAuthentication $reference
+     * @return void
+     */
+    public function addAccessLists(array $parameters, BackendUserAuthentication $reference)
+    {
+        $blacklist = [];
+        $whitelist = [];
+        foreach ($reference->userGroups as $groupData) {
+            $blacklist = array_merge(
+                $blacklist,
+                GeneralUtility::trimExplode(',', $groupData['tx_fluidcontent_deniedfluidcontent'])
+            );
+            $whitelist = array_merge(
+                $whitelist,
+                GeneralUtility::trimExplode(',', $groupData['tx_fluidcontent_allowedfluidcontent'])
+            );
+        }
+        $reference->dataLists['fluidcontentBlacklist'] = array_unique(array_diff($blacklist, ['']));
+        $reference->dataLists['fluidcontentWhitelist'] = array_unique(array_diff($whitelist, ['']));
+    }
 }
