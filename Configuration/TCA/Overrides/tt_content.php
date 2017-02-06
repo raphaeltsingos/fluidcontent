@@ -8,6 +8,7 @@ call_user_func(
 
         $languageFilePrefix = 'LLL:EXT:fluidcontent/Resources/Private/Language/locallang.xlf:';
         $frontendLanguageFilePrefix = 'LLL:EXT:frontend/Resources/Private/Language/locallang_ttc.xlf:';
+        $tabsLanguageFilePrefix = 'LLL:EXT:core/Resources/Private/Language/Form/locallang_tabs.xlf';
 
         \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTCAcolumns(
             'tt_content',
@@ -31,19 +32,19 @@ call_user_func(
 
         $GLOBALS['TCA']['tt_content']['ctrl']['requestUpdate'] .= ',tx_fed_fcefile';
         $GLOBALS['TCA']['tt_content']['types']['fluidcontent_content']['showitem'] = '
-            --div--;LLL:EXT:core/Resources/Private/Language/Form/locallang_tabs.xlf:general,
-            --palette--;LLL:EXT:frontend/Resources/Private/Language/locallang_ttc.xlf:palette.general;general,
-            --palette--;LLL:EXT:frontend/Resources/Private/Language/locallang_ttc.xlf:palette.header;header,
-            --div--;LLL:EXT:frontend/Resources/Private/Language/locallang_ttc.xlf:tabs.appearance, layout;LLL:EXT:frontend/Resources/Private/Language/locallang_ttc.xlf:layout_formlabel,
-            --palette--;LLL:EXT:frontend/Resources/Private/Language/locallang_ttc.xlf:palette.appearanceLinks;appearanceLinks,
-            --div--;LLL:EXT:core/Resources/Private/Language/Form/locallang_tabs.xlf:language, --palette--;;language,
-            --div--;LLL:EXT:core/Resources/Private/Language/Form/locallang_tabs.xlf:access,
+            --div--;' . $tabsLanguageFilePrefix . ':general,
+            --palette--;' . $frontendLanguageFilePrefix . ':palette.general;general,
+            --palette--;' . $frontendLanguageFilePrefix . ':palette.header;header,
+            --div--;' . $frontendLanguageFilePrefix . ':tabs.appearance, layout;LLL:EXT:frontend/Resources/Private/Language/locallang_ttc.xlf:layout_formlabel,
+            --palette--;' . $frontendLanguageFilePrefix . ':palette.appearanceLinks;appearanceLinks,
+            --div--;' . $tabsLanguageFilePrefix . ':language, --palette--;;language,
+            --div--;' . $tabsLanguageFilePrefix . ':access,
             --palette--;;hidden,
-            --palette--;LLL:EXT:frontend/Resources/Private/Language/locallang_ttc.xlf:palette.access;access,
-            --div--;LLL:EXT:core/Resources/Private/Language/Form/locallang_tabs.xlf:categories,
+            --palette--;' . $frontendLanguageFilePrefix . ':palette.access;access,
+            --div--;' . $tabsLanguageFilePrefix . ':categories,
             --div--;LLL:EXT:lang/Resources/Private/Language/locallang_tca.xlf:sys_category.tabs.category, categories,
-            --div--;LLL:EXT:core/Resources/Private/Language/Form/locallang_tabs.xlf:notes, rowDescription,
-            --div--;LLL:EXT:core/Resources/Private/Language/Form/locallang_tabs.xlf:extended,
+            --div--;' . $tabsLanguageFilePrefix . ':notes, rowDescription,
+            --div--;' . $tabsLanguageFilePrefix . ':extended,
             --div--;LLL:EXT:flux/Resources/Private/Language/locallang.xlf:tt_content.tabs.relation, tx_flux_parent, tx_flux_column
         ';
 
