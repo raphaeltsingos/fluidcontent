@@ -36,6 +36,7 @@ call_user_func(
             ]
         );
 
+        $GLOBALS['TCA']['tt_content']['ctrl']['useColumnsForDefaultValues'] .= ',tx_fed_fcefile';
         $GLOBALS['TCA']['tt_content']['ctrl']['requestUpdate'] .= ',tx_fed_fcefile';
         $GLOBALS['TCA']['tt_content']['types']['fluidcontent_content']['showitem'] = '
             --palette--;' . $frontendLanguageFilePrefix . 'palette.general;general,
