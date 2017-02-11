@@ -303,6 +303,9 @@ class ConfigurationService extends FluxService implements SingletonInterface
                 if (true === empty($group)) {
                     $group = 'common';
                 }
+                if (true === (boolean) $form->getOption('Fluidcontent.hidden')) {
+                    continue;
+                }
                 $sanitizedGroup = $this->sanitizeString($group);
                 $tabId = $group === $sanitizedGroup ? $group : 'group_' . $sanitizedGroup;
                 if (!isset($wizardTabs[$tabId]['title'])) {
