@@ -348,7 +348,7 @@ class ConfigurationService extends FluxService implements SingletonInterface
                     rtrim($templateRootPath, '/') . '/' . $controllerName .'/',
                     'html',
                     false,
-                    1
+                    0
                 );
                 if (0 < count($files)) {
                     foreach ($files as $templateFilename) {
