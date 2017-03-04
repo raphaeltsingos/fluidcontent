@@ -254,7 +254,7 @@ class ConfigurationService extends FluxService implements SingletonInterface
      */
     protected function getAllRootTypoScriptTemplates()
     {
-        $condition = 'deleted = 0 AND hidden = 0 AND starttime <= :starttime AND (endtime = 0 OR endtime > :endtime)';
+        $condition = 'root = 1 AND deleted = 0 AND hidden = 0 AND starttime <= :starttime AND (endtime = 0 OR endtime > :endtime)';
         $parameters = [
             ':starttime' => $GLOBALS['SIM_ACCESS_TIME'],
             ':endtime' => $GLOBALS['SIM_ACCESS_TIME']
@@ -303,6 +303,9 @@ class ConfigurationService extends FluxService implements SingletonInterface
                 if (true === empty($group)) {
                     $group = 'common';
                 }
+                if (true === (boolean) $form->getOption('Fluidcontent.hidden')) {
+                    continue;
+                }
                 $sanitizedGroup = $this->sanitizeString($group);
                 $tabId = $group === $sanitizedGroup ? $group : 'group_' . $sanitizedGroup;
                 if (!isset($wizardTabs[$tabId]['title'])) {
@@ -343,7 +346,9 @@ class ConfigurationService extends FluxService implements SingletonInterface
                 $files = GeneralUtility::getAllFilesAndFoldersInPath(
                     $files,
                     rtrim($templateRootPath, '/') . '/' . $controllerName .'/',
-                    'html'
+                    'html',
+                    false,
+                    0
                 );
                 if (0 < count($files)) {
                     foreach ($files as $templateFilename) {
