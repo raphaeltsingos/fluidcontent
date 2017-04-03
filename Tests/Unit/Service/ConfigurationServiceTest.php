@@ -21,6 +21,7 @@ use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 use TYPO3\CMS\Extbase\Object\ObjectManager;
+use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
 
 /**
  * Class ConfigurationServiceTest
@@ -173,6 +174,9 @@ class ConfigurationServiceTest extends AbstractTestCase
                 'templateRootPaths' => array('EXT:fluidcontent/Tests/Fixtures/Templates/')
             )
         );
+        $cacheManager = $this->getMockBuilder(CacheManager::class)->setMethods(['hasCache'])->getMock();
+        $cacheManager->expects($this->any())->method('hasCache')->with('fluidcontent')->willReturn(false);
+        ObjectAccess::setProperty($mock, 'manager', $cacheManager, true);
         $mock->expects($this->once())->method('getContentConfiguration')->willReturn($paths);
         $mock->expects($this->exactly(2))->method('message');
         $result = $this->callInaccessibleMethod($mock, 'buildAllWizardTabGroups', $paths);
