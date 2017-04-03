@@ -10,6 +10,7 @@ namespace FluidTYPO3\Fluidcontent\Tests\Unit\Provider;
 
 use FluidTYPO3\Fluidcontent\Hooks\WizardItemsHookSubscriber;
 use FluidTYPO3\Fluidcontent\Service\ConfigurationService;
+use FluidTYPO3\Fluidcontent\Tests\Unit\AbstractTestCase;
 use FluidTYPO3\Flux\Form\Container\Column;
 use FluidTYPO3\Flux\Form\Container\Grid;
 use FluidTYPO3\Flux\Form\Container\Row;
@@ -19,14 +20,13 @@ use TYPO3\CMS\Backend\Controller\ContentElement\NewContentElementController;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\DatabaseConnection;
 use TYPO3\CMS\Core\Database\PreparedStatement;
-use TYPO3\CMS\Core\Tests\UnitTestCase;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Object\ObjectManager;
 
 /**
  * Class WizardItemsHookSubscriberTest
  */
-class WizardItemsHookSubscriberTest extends UnitTestCase
+class WizardItemsHookSubscriberTest extends AbstractTestCase
 {
 
     public function testCreatesInstance()

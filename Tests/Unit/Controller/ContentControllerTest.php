@@ -9,16 +9,16 @@ namespace FluidTYPO3\Fluidcontent\Tests\Unit\Controller;
  */
 
 use FluidTYPO3\Fluidcontent\Controller\ContentController;
+use FluidTYPO3\Fluidcontent\Tests\Unit\AbstractTestCase;
 use FluidTYPO3\Flux\Configuration\ConfigurationManager;
 use FluidTYPO3\Flux\View\ExposedTemplateView;
-use TYPO3\CMS\Core\Tests\UnitTestCase;
 use TYPO3\CMS\Extbase\Mvc\Request;
 use TYPO3\CMS\Extbase\Reflection\PropertyReflection;
 
 /**
  * Class ContentControllerTest
  */
-class ContentControllerTest extends UnitTestCase
+class ContentControllerTest extends AbstractTestCase
 {
 
     public function testInitializeView()

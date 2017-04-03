@@ -9,6 +9,7 @@ namespace FluidTYPO3\Fluidcontent\Tests\Unit\Service;
  */
 
 use FluidTYPO3\Fluidcontent\Service\ConfigurationService;
+use FluidTYPO3\Fluidcontent\Tests\Unit\AbstractTestCase;
 use FluidTYPO3\Flux\Configuration\ConfigurationManager;
 use FluidTYPO3\Flux\Core;
 use FluidTYPO3\Flux\Form;
@@ -16,7 +17,6 @@ use FluidTYPO3\Flux\View\ExposedTemplateView;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
-use TYPO3\CMS\Core\Tests\UnitTestCase;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
@@ -25,7 +25,7 @@ use TYPO3\CMS\Extbase\Object\ObjectManager;
 /**
  * Class ConfigurationServiceTest
  */
-class ConfigurationServiceTest extends UnitTestCase
+class ConfigurationServiceTest extends AbstractTestCase
 {
     const CACHE_KEY_PAGETSCONFIG = 'pageTsConfig';
 
