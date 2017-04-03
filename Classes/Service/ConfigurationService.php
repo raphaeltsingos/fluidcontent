@@ -48,11 +48,6 @@ class ConfigurationService extends FluxService implements SingletonInterface
     protected $manager;
 
     /**
-     * @var PageRepository
-     */
-    protected $pageRepository;
-
-    /**
      * @var WorkspacesAwareRecordService
      */
     protected $recordService;
@@ -87,15 +82,6 @@ class ConfigurationService extends FluxService implements SingletonInterface
     public function injectRecordService(WorkspacesAwareRecordService $recordService)
     {
         $this->recordService = $recordService;
-    }
-
-    /**
-     * @param PageRepository $pageRepository
-     * @return void
-     */
-    public function injectPageRepository(PageRepository $pageRepository)
-    {
-        $this->pageRepository = $pageRepository;
     }
 
     /**
@@ -268,7 +254,7 @@ class ConfigurationService extends FluxService implements SingletonInterface
      */
     protected function getTypoScriptTemplatesInRootline()
     {
-        $rootline = $this->pageRepository->getRootLine($this->configurationManager->getCurrentPageId());
+        $rootline = $this->getPageRepository()->getRootLine($this->configurationManager->getCurrentPageId());
         $pageUids = [];
         foreach ($rootline as $page) {
             $pageUids[] = $page['uid'];
@@ -599,5 +585,13 @@ class ConfigurationService extends FluxService implements SingletonInterface
     protected function getTypoScriptParser()
     {
         return new TypoScriptParser();
+    }
+
+    /**
+     * @return PageRepository
+     */
+    protected function getPageRepository()
+    {
+        return $this->objectManager->get(PageRepository::class);
     }
 }
