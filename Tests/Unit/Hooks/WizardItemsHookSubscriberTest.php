@@ -10,7 +10,7 @@ namespace FluidTYPO3\Fluidcontent\Tests\Unit\Provider;
 
 use FluidTYPO3\Fluidcontent\Hooks\WizardItemsHookSubscriber;
 use FluidTYPO3\Fluidcontent\Service\ConfigurationService;
-use FluidTYPO3\Fluidcontent\Tests\Unit\AbstractTestCase;
+use FluidTYPO3\Development\AbstractTestCase;
 use FluidTYPO3\Flux\Form\Container\Column;
 use FluidTYPO3\Flux\Form\Container\Grid;
 use FluidTYPO3\Flux\Form\Container\Row;

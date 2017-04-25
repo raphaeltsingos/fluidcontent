@@ -9,7 +9,7 @@ namespace FluidTYPO3\Fluidcontent\Tests\Unit\Service;
  */
 
 use FluidTYPO3\Fluidcontent\Service\ConfigurationService;
-use FluidTYPO3\Fluidcontent\Tests\Unit\AbstractTestCase;
+use FluidTYPO3\Development\AbstractTestCase;
 use FluidTYPO3\Flux\Configuration\ConfigurationManager;
 use FluidTYPO3\Flux\Core;
 use FluidTYPO3\Flux\Form;

@@ -29,7 +29,7 @@ if (!isset($autoloader)) {
     );
 }
 
-$autoloader->addPsr4('FluidTYPO3\\Fluidcontent\\Tests\\', __DIR__ . '/../typo3conf/ext/fluidcontent/Tests/');
+$autoloader->addPsr4('FluidTYPO3\\Fluidcontent\\Tests\\', __DIR__ . '/Tests/');
 
 \FluidTYPO3\Development\Bootstrap::initialize(
 	$autoloader,

@@ -10,7 +10,7 @@ namespace FluidTYPO3\Fluidcontent\Tests\Unit\Provider;
 
 use FluidTYPO3\Fluidcontent\Provider\ContentProvider;
 use FluidTYPO3\Fluidcontent\Service\ConfigurationService;
-use FluidTYPO3\Fluidcontent\Tests\Unit\AbstractTestCase;
+use FluidTYPO3\Development\AbstractTestCase;
 use FluidTYPO3\Flux\Service\WorkspacesAwareRecordService;
 use TYPO3\CMS\Core\Database\DatabaseConnection;
 use TYPO3\CMS\Core\Database\PreparedStatement;
