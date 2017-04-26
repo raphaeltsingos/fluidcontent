@@ -10,13 +10,10 @@ namespace FluidTYPO3\Fluidcontent\Tests\Unit\Provider;
 
 use FluidTYPO3\Fluidcontent\Provider\ContentProvider;
 use FluidTYPO3\Fluidcontent\Service\ConfigurationService;
-use FluidTYPO3\Flux\Configuration\BackendConfigurationManager;
-use FluidTYPO3\Flux\Configuration\ConfigurationManager;
-use FluidTYPO3\Flux\Service\FluxService;
+use FluidTYPO3\Development\AbstractTestCase;
 use FluidTYPO3\Flux\Service\WorkspacesAwareRecordService;
 use TYPO3\CMS\Core\Database\DatabaseConnection;
 use TYPO3\CMS\Core\Database\PreparedStatement;
-use TYPO3\CMS\Core\Tests\UnitTestCase;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
@@ -25,7 +22,7 @@ use TYPO3\CMS\Extbase\Object\ObjectManager;
 /**
  * Class ContentProviderTest
  */
-class ContentProviderTest extends UnitTestCase
+class ContentProviderTest extends AbstractTestCase
 {
 
     /**

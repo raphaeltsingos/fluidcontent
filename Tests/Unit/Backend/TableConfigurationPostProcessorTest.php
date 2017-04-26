@@ -10,12 +10,12 @@ namespace FluidTYPO3\Fluidcontent\Tests\Unit\Backend;
 
 use FluidTYPO3\Fluidcontent\Backend\TableConfigurationPostProcessor;
 use FluidTYPO3\Fluidcontent\Service\ConfigurationService;
-use TYPO3\CMS\Core\Tests\UnitTestCase;
+use FluidTYPO3\Development\AbstractTestCase;
 
 /**
  * Class TableConfigurationPostProcessorTest
  */
-class TableConfigurationPostProcessorTest extends UnitTestCase
+class TableConfigurationPostProcessorTest extends AbstractTestCase
 {
 
     /**
