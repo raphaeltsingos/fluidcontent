@@ -48,11 +48,6 @@ class ConfigurationService extends FluxService implements SingletonInterface
     protected $manager;
 
     /**
-     * @var PageRepository
-     */
-    protected $pageRepository;
-
-    /**
      * @var WorkspacesAwareRecordService
      */
     protected $recordService;
@@ -87,15 +82,6 @@ class ConfigurationService extends FluxService implements SingletonInterface
     public function injectRecordService(WorkspacesAwareRecordService $recordService)
     {
         $this->recordService = $recordService;
-    }
-
-    /**
-     * @param PageRepository $pageRepository
-     * @return void
-     */
-    public function injectPageRepository(PageRepository $pageRepository)
-    {
-        $this->pageRepository = $pageRepository;
     }
 
     /**
@@ -268,7 +254,7 @@ class ConfigurationService extends FluxService implements SingletonInterface
      */
     protected function getTypoScriptTemplatesInRootline()
     {
-        $rootline = $this->pageRepository->getRootLine($this->configurationManager->getCurrentPageId());
+        $rootline = $this->getPageRepository()->getRootLine($this->configurationManager->getCurrentPageId());
         $pageUids = [];
         foreach ($rootline as $page) {
             $pageUids[] = $page['uid'];
@@ -307,12 +293,12 @@ class ConfigurationService extends FluxService implements SingletonInterface
                     continue;
                 }
                 $sanitizedGroup = $this->sanitizeString($group);
-                $tabId = $group === $sanitizedGroup ? $group : 'group_' . $sanitizedGroup;
+                $tabId = $group === $sanitizedGroup ? $group : 'group' . $sanitizedGroup;
                 if (!isset($wizardTabs[$tabId]['title'])) {
                     $wizardTabs[$tabId]['title'] = $this->translateLabel(
                         'fluidcontent.newContentWizard.group.' . $group,
                         ExtensionNamingUtility::getExtensionKey($extensionKey)
-                    ) ?? $tabId;
+                    ) ?? $group;
                 }
                 $contentElementId = $form->getOption('contentElementId');
                 $elementTsConfig = $this->buildWizardTabItem($tabId, $id, $form, $contentElementId);
@@ -432,7 +418,7 @@ class ConfigurationService extends FluxService implements SingletonInterface
                 mod.wizards.newContentElement.wizardItems.%s.position = 0
                 ',
                 $tabId,
-                !empty($existingItems[$tabId]['header']) ? $existingItems[$tabId]['header'] : $tabId,
+                !empty($existingItems[$tabId]['header']) ? $existingItems[$tabId]['header'] : $tab['title'],
                 $tabId,
                 implode(',', array_keys($tab['elements'])),
                 $tabId
@@ -541,8 +527,8 @@ class ConfigurationService extends FluxService implements SingletonInterface
     protected function sanitizeString($string)
     {
         $pattern = '/([^a-z0-9\-]){1,}/i';
-        $replaced = preg_replace($pattern, '_', $string);
-        $replaced = trim($replaced, '_');
+        $replaced = preg_replace($pattern, '', $string);
+        $replaced = trim($replaced);
         return empty($replaced) ? md5($string) : $replaced;
     }
 
@@ -599,5 +585,13 @@ class ConfigurationService extends FluxService implements SingletonInterface
     protected function getTypoScriptParser()
     {
         return new TypoScriptParser();
+    }
+
+    /**
+     * @return PageRepository
+     */
+    protected function getPageRepository()
+    {
+        return $this->objectManager->get(PageRepository::class);
     }
 }
