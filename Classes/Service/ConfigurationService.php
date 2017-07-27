@@ -349,9 +349,9 @@ class ConfigurationService extends FluxService implements SingletonInterface
                         if ($form->getOption('Fluidcontent.hidden')) {
                             continue;
                         }
-                        $id = preg_replace('/[\.\/]/', '_', $registeredExtensionKey . '/' . $actionName . '.html');
-                        $form->setOption('contentElementId', $registeredExtensionKey . ':' . $fileRelPath);
-                        $elements[$registeredExtensionKey][$id] = $form;
+                        $id = preg_replace('/[\.\/]/', '_', $extensionKey . '/' . $actionName . '.html');
+                        $form->setOption('contentElementId', $extensionKey . ':' . $fileRelPath);
+                        $elements[$extensionKey][$id] = $form;
                     }
                 }
             }
