@@ -12,8 +12,6 @@ use FluidTYPO3\Fluidcontent\Provider\ContentProvider;
 use FluidTYPO3\Flux\Configuration\ConfigurationManager;
 use FluidTYPO3\Flux\Core;
 use FluidTYPO3\Flux\Form;
-use FluidTYPO3\Flux\View\TemplatePaths;
-use FluidTYPO3\Flux\View\ViewContext;
 use FluidTYPO3\Flux\Service\FluxService;
 use FluidTYPO3\Flux\Service\WorkspacesAwareRecordService;
 use FluidTYPO3\Flux\Utility\ExtensionNamingUtility;
@@ -27,6 +25,7 @@ use TYPO3\CMS\Core\TypoScript\Parser\TypoScriptParser;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
+use TYPO3\CMS\Fluid\View\TemplatePaths;
 use TYPO3\CMS\Frontend\Page\PageRepository;
 
 /**
@@ -120,7 +119,7 @@ class ConfigurationService extends FluxService implements SingletonInterface
     public function getContentConfiguration($extensionName = null)
     {
         if (null !== $extensionName) {
-            return (new \TYPO3\CMS\Fluid\View\TemplatePaths(ExtensionNamingUtility::getExtensionKey($extensionName)))->toArray();
+            return (new TemplatePaths(ExtensionNamingUtility::getExtensionKey($extensionName)))->toArray();
         }
         $registeredExtensionKeys = (array) Core::getRegisteredProviderExtensionKeys('Content');
         $configuration = [];
@@ -328,7 +327,7 @@ class ConfigurationService extends FluxService implements SingletonInterface
             }
             $extensionKey = ExtensionNamingUtility::getExtensionKey($extensionKey);
             $provider->setExtensionKey($extensionKey);
-            $templatePaths = new \TYPO3\CMS\Fluid\View\TemplatePaths($templatePathSet);
+            $templatePaths = new TemplatePaths($templatePathSet);
             foreach ($templatePaths->getTemplateRootPaths() as $templateRootPath) {
                 $files = GeneralUtility::getAllFilesAndFoldersInPath(
                     $files,
