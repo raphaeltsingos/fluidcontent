@@ -541,10 +541,7 @@ class ConfigurationService extends FluxService implements SingletonInterface
      */
     protected function sendDisabledContentWarning($templatePathAndFilename)
     {
-        $this->message(
-            'Disabled Fluid Content Element: ' . $templatePathAndFilename,
-            GeneralUtility::SYSLOG_SEVERITY_NOTICE
-        );
+        GeneralUtility::sysLog('Disabled Fluid Content Element: ' . $templatePathAndFilename, GeneralUtility::SYSLOG_SEVERITY_NOTICE);
     }
 
     /**
