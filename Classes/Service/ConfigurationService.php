@@ -199,7 +199,7 @@ class ConfigurationService extends FluxService implements SingletonInterface
             $pageTsConfig .= $collectionPageTsConfig . LF;
             $pageTsConfig .= '[GLOBAL]' . LF;
         } catch (\RuntimeException $error) {
-            $this->debug($error);
+            $this->message($error);
         }
         $this->restorePageUidForConfigurationManager();
         return $pageTsConfig;
