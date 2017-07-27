@@ -42,6 +42,7 @@ $autoloader->addPsr4('FluidTYPO3\\Fluidcontent\\Tests\\', __DIR__ . '/');
 		'extbase_datamapfactory_datamap' => \FluidTYPO3\Development\Bootstrap::CACHE_NULL,
 		'extbase_typo3dbbackend_tablecolumns' => \FluidTYPO3\Development\Bootstrap::CACHE_NULL,
 		'extbase_typo3dbbackend_queries' => \FluidTYPO3\Development\Bootstrap::CACHE_NULL,
+		'flux' => \FluidTYPO3\Development\Bootstrap::CACHE_NULL,
 		'fluidcontent' => \FluidTYPO3\Development\Bootstrap::CACHE_NULL,
 		'l10n' => \FluidTYPO3\Development\Bootstrap::CACHE_NULL,
 	)

@@ -16,6 +16,7 @@ use TYPO3\CMS\Core\Database\DatabaseConnection;
 use TYPO3\CMS\Core\Database\PreparedStatement;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Configuration\ConfigurationManager;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 use TYPO3\CMS\Extbase\Object\ObjectManager;
 
@@ -84,7 +85,34 @@ class ContentProviderTest extends AbstractTestCase
     {
         $GLOBALS['TYPO3_LOADED_EXT'] = [];
         $instance = $this->createProviderInstance();
+
+        $extPath = ExtensionManagementUtility::extPath('fluidcontent');
+        $configuration = array(
+            'templateRootPaths' => array(
+                $extPath .  'Resources/Private/Templates/',
+                $extPath .  'Tests/Fixtures/Templates/'
+            ),
+            'partialRootPaths' => array(
+                $extPath .  'Resources/Private/Partials/'
+            ),
+            'layoutRootPaths' => array(
+                $extPath .  'Resources/Private/Layouts/'
+            ),
+        );
+        $configurationManager = $this->getMockBuilder(ConfigurationManager::class)->setMethods(['getConfiguration'])->getMock();
+        $configurationManager->expects($this->once())->method('getConfiguration')->willReturn(
+            ['module' => ['tx_fluidcontent' => ['view' => $configuration]]]
+        );
+
+        $objectManager = $this->getMockBuilder(ObjectManager::class)->setMethods(['get'])->getMock();
+        $objectManager->expects($this->atLeastOnce())->method('get')->with(ConfigurationManagerInterface::class)->willReturn($configurationManager);
+
+        GeneralUtility::setSingletonInstance(ObjectManager::class, $objectManager);
+
         $result = $instance->getTemplatePathAndFilename($record);
+
+        GeneralUtility::removeSingletonInstance(ObjectManager::class, $objectManager);
+
         $this->assertEquals($expected, $result);
     }
 
@@ -97,7 +125,6 @@ class ContentProviderTest extends AbstractTestCase
         $file = $path . 'Resources/Private/Templates/Content/Error.html';
         return [
             [['uid' => 0], $file],
-            [['tx_fed_fcefile' => 'test:Error.html'], $file],
             [['tx_fed_fcefile' => 'fluidcontent:Error.html'], $file],
         ];
     }

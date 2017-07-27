@@ -8,12 +8,13 @@ namespace FluidTYPO3\Fluidcontent\Tests\Unit\Service;
  * LICENSE.md file that was distributed with this source code.
  */
 
+use FluidTYPO3\Fluidcontent\Provider\ContentProvider;
 use FluidTYPO3\Fluidcontent\Service\ConfigurationService;
 use FluidTYPO3\Development\AbstractTestCase;
-use FluidTYPO3\Flux\Configuration\ConfigurationManager;
+use FluidTYPO3\Flux\Configuration\BackendConfigurationManager;
+use TYPO3\CMS\Extbase\Configuration\ConfigurationManager;
 use FluidTYPO3\Flux\Core;
 use FluidTYPO3\Flux\Form;
-use FluidTYPO3\Flux\View\ExposedTemplateView;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
@@ -32,24 +33,42 @@ class ConfigurationServiceTest extends AbstractTestCase
 
     public function testGetContentConfiguration()
     {
-        $configuration = array(
-            'templateRootPaths' => array('EXT:fluidcontent/Tests/Fixtures/Templates/'),
-            'partialRootPaths' => array('EXT:fluidcontent/Resources/Private/Partials/'),
-            'layoutRootPaths' => array('EXT:fluidcontent/Resources/Private/Layouts/'),
-        );
+        $extPath = ExtensionManagementUtility::extPath('fluidcontent');
         Core::registerProviderExtensionKey('FluidTYPO3.Fluidcontent', 'Content');
         /** @var ConfigurationService $service */
         $service = $this->getMockBuilder(ConfigurationService::class)
-            ->setMethods(array('getViewConfigurationForExtensionName'))
+            ->setMethods(['dummy'])
             ->disableOriginalConstructor()
             ->getMock();
-        $service->expects($this->once())->method('getViewConfigurationForExtensionName')->willReturn($configuration);
-        $service->injectConfigurationManager(GeneralUtility::makeInstance(ObjectManager::class)
-            ->get(ConfigurationManagerInterface::class));
+
+        $configuration = array(
+            'templateRootPaths' => array(
+                $extPath .  'Resources/Private/Templates/',
+                $extPath .  'Tests/Fixtures/Templates/'
+            ),
+            'partialRootPaths' => array(
+                $extPath .  'Resources/Private/Partials/'
+            ),
+            'layoutRootPaths' => array(
+                $extPath .  'Resources/Private/Layouts/'
+            ),
+        );
+        $configurationManager = $this->getMockBuilder(ConfigurationManager::class)->setMethods(['getConfiguration'])->getMock();
+        $configurationManager->expects($this->once())->method('getConfiguration')->willReturn(
+            ['module' => ['tx_fluidcontent' => ['view' => $configuration]]]
+        );
+
+        $objectManager = $this->getMockBuilder(ObjectManager::class)->setMethods(['get'])->getMock();
+        $objectManager->expects($this->atLeastOnce())->method('get')->with(ConfigurationManagerInterface::class)->willReturn($configurationManager);
+
+        GeneralUtility::setSingletonInstance(ObjectManager::class, $objectManager);
+
         $result = $service->getContentConfiguration();
-        $this->assertEquals(array(
-            'FluidTYPO3.Fluidcontent' => $configuration
-        ), $result);
+
+        GeneralUtility::removeSingletonInstance(ObjectManager::class, $objectManager);
+
+
+        $this->assertEquals(array('FluidTYPO3.Fluidcontent' => $configuration), $result);
     }
 
     public function testWriteCachedConfigurationIfMissing()
@@ -131,23 +150,23 @@ class ConfigurationServiceTest extends AbstractTestCase
     public function testGetContentElementFormInstances()
     {
         $class = substr(str_replace('Tests\\Unit\\', '', get_class($this)), 0, -4);
-        $view = $this->getMockBuilder(ExposedTemplateView::class)->setMethods(['setControllerContext', 'getStoredVariable'])->getMock();
 
         /** @var ConfigurationService|\PHPUnit_Framework_MockObject_MockObject $mock */
-        $mock = $this->getMockBuilder($class)->setMethods(array('getContentConfiguration', 'message', 'getPreparedExposedTemplateView'))->getMock();
+        $mock = $this->getMockBuilder($class)->setMethods(array('getContentConfiguration'))->getMock();
+        $provider = new ContentProvider();
+        $provider->setForm(Form::create());
+
         /** @var ObjectManager $objectManager */
-        $objectManager = GeneralUtility::makeInstance(ObjectManager::class);
+        $objectManager = $this->getMockBuilder(ObjectManager::class)->setMethods(['get'])->getMock();
+        $objectManager->method('get')->with(ContentProvider::class)->willReturn($provider);
+
         $mock->injectObjectManager($objectManager);
-        $view->expects($this->at(0))->method('getStoredVariable')->willReturn(Form::create(['enabled' => false]));
-        $view->expects($this->at(1))->method('getStoredVariable')->willReturn(Form::create(['enabled' => true]));
-        $view->expects($this->at(2))->method('getStoredVariable')->willReturn(null);
-        $mock->expects($this->any())->method('getPreparedExposedTemplateView')->willReturn($view);
+
         $mock->expects($this->once())->method('getContentConfiguration')->willReturn(array(
             'fluidcontent' => array(
                 'templateRootPaths' => [ExtensionManagementUtility::extPath('fluidcontent', 'Tests/Fixtures/Templates/')]
             )
         ));
-        $mock->expects($this->exactly(2))->method('message');
         $result = $mock->getContentElementFormInstances();
         $this->assertInstanceOf(Form::class, $result['fluidcontent']['fluidcontent_DummyContent_html']);
     }
@@ -158,16 +177,17 @@ class ConfigurationServiceTest extends AbstractTestCase
     public function testBuildAllWizardTabGroups()
     {
         $class = substr(str_replace('Tests\\Unit\\', '', get_class($this)), 0, -4);
-        $view = $this->getMockBuilder(ExposedTemplateView::class)->setMethods(['setControllerContext', 'getStoredVariable'])->getMock();
-        $view->expects($this->at(0))->method('getStoredVariable')->willReturn(Form::create(['enabled' => false]));
-        $view->expects($this->at(1))->method('getStoredVariable')->willReturn(Form::create(['enabled' => true]));
-        $view->expects($this->at(2))->method('getStoredVariable')->willReturn(null);
+
         /** @var ConfigurationService|\PHPUnit_Framework_MockObject_MockObject $mock */
-        $mock = $this->getMockBuilder($class)->setMethods(array('getContentConfiguration', 'message', 'translateLabel', 'getPreparedExposedTemplateView'))->getMock();
-        $mock->expects($this->any())->method('getPreparedExposedTemplateView')->willReturn($view);
+        $mock = $this->getMockBuilder($class)->setMethods(array('getContentConfiguration', 'message', 'translateLabel'))->getMock();
         $mock->expects($this->atLeastOnce())->method('translateLabel')->willReturn('translated');
+
+        $provider = new ContentProvider();
+        $provider->setForm(Form::create());
+
         /** @var ObjectManager $objectManager */
-        $objectManager = GeneralUtility::makeInstance(ObjectManager::class);
+        $objectManager = $this->getMockBuilder(ObjectManager::class)->setMethods(['get'])->getMock();
+        $objectManager->method('get')->with(ContentProvider::class)->willReturn($provider);
         $mock->injectObjectManager($objectManager);
         $paths = array(
             'fluidcontent' => array(
@@ -178,7 +198,6 @@ class ConfigurationServiceTest extends AbstractTestCase
         $cacheManager->expects($this->any())->method('hasCache')->with('fluidcontent')->willReturn(false);
         ObjectAccess::setProperty($mock, 'manager', $cacheManager, true);
         $mock->expects($this->once())->method('getContentConfiguration')->willReturn($paths);
-        $mock->expects($this->exactly(2))->method('message');
         $result = $this->callInaccessibleMethod($mock, 'buildAllWizardTabGroups', $paths);
         $this->assertNotEmpty($result['common']['title']);
         $this->assertArrayHasKey('fluidcontent_DummyContent_html', $result['common']['elements']);
@@ -212,11 +231,10 @@ class ConfigurationServiceTest extends AbstractTestCase
     public function testRenderPageTypoScriptForPageUidDelegatesExceptionsToDebug()
     {
         $class = substr(str_replace('Tests\\Unit\\', '', get_class($this)), 0, -4);
-        $instance = $this->getMockBuilder($class)->setMethods(array('getContentConfiguration', 'debug', 'message'))->getMock();
+        $instance = $this->getMockBuilder($class)->setMethods(array('getContentConfiguration', 'message'))->getMock();
         $instance->expects($this->once())->method('getContentConfiguration')
             ->willThrowException(new \RuntimeException('test'));
-        $instance->expects($this->never())->method('message');
-        $instance->expects($this->once())->method('debug');
+        $instance->expects($this->once())->method('message');
         $this->callInaccessibleMethod($instance, 'renderPageTypoScriptForPageUid', 0, array());
     }
 
@@ -227,7 +245,7 @@ class ConfigurationServiceTest extends AbstractTestCase
     {
         $instance = new ConfigurationService();
         /** @var ConfigurationManager|\PHPUnit_Framework_MockObject_MockObject $mock */
-        $mock = $this->getMockBuilder(ConfigurationManager::class)->setMethods(array('setCurrentPageUid', 'getCurrentPageId'))->getMock();
+        $mock = $this->getMockBuilder(\FluidTYPO3\Flux\Configuration\ConfigurationManager::class)->setMethods(array('setCurrentPageUid', 'getCurrentPageId'))->getMock();
         $mock->expects($this->at(0))->method('setCurrentPageUid')->with(1);
         $mock->expects($this->at(1))->method('getCurrentPageId')->willReturn(2);
         $mock->expects($this->at(2))->method('setCurrentPageUid')->with(2);
