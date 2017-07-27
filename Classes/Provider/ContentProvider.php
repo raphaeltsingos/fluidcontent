@@ -15,7 +15,7 @@ use FluidTYPO3\Flux\Provider\ContentProvider as FluxContentProvider;
 use FluidTYPO3\Flux\Provider\ProviderInterface;
 use FluidTYPO3\Flux\Utility\ExtensionNamingUtility;
 use FluidTYPO3\Flux\Utility\PathUtility;
-use FluidTYPO3\Flux\View\TemplatePaths;
+use TYPO3\CMS\Fluid\View\TemplatePaths;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 
@@ -142,7 +142,7 @@ class ContentProvider extends FluxContentProvider implements ProviderInterface
     public function getForm(array $row)
     {
         $form = parent::getForm($row);
-        if (null !== $form) {
+        if ($form) {
             $moveSortingProperty = (
                 false === $form->hasOption(Form::OPTION_SORTING)
                 && true === $form->hasOption('Fluidcontent.sorting')
@@ -172,29 +172,14 @@ class ContentProvider extends FluxContentProvider implements ProviderInterface
         }
         $templateReference = $this->getControllerActionReferenceFromRecord($row);
         list (, $filename) = explode(':', $templateReference);
-        list ($controllerAction, $format) = explode('.', $filename);
+        list (, $format) = explode('.', $filename);
         $controllerAction = $this->getControllerActionFromRecord($row);
-        $paths = $this->getTemplatePaths($row);
-        $templatePaths = new TemplatePaths($paths);
+        $templatePaths = new TemplatePaths($this->getExtensionKey($row));
         return $templatePaths->resolveTemplateFileForControllerAndActionAndFormat(
             'Content',
             $controllerAction,
             $format
         );
-    }
-
-    /**
-     * @param array $row
-     * @return array
-     */
-    public function getTemplatePaths(array $row)
-    {
-        $extensionName = $this->getExtensionKey($row);
-        $paths = $this->contentConfigurationService->getContentConfiguration($extensionName);
-        if (true === is_array($paths) && false === empty($paths)) {
-            $paths = PathUtility::translatePath($paths);
-        }
-        return $paths;
     }
 
     /**
@@ -246,6 +231,9 @@ class ContentProvider extends FluxContentProvider implements ProviderInterface
      */
     public function getControllerActionReferenceFromRecord(array $row)
     {
+        if ($this->templatePathAndFilename && $this->extensionKey) {
+            return $this->extensionKey . ':' . pathinfo($this->templatePathAndFilename, PATHINFO_BASENAME);
+        }
         $fileReference = $row['tx_fed_fcefile'];
         return true === empty($fileReference) ? 'Fluidcontent:error.html' : $fileReference;
     }
@@ -263,22 +251,5 @@ class ContentProvider extends FluxContentProvider implements ProviderInterface
             return 100;
         }
         return 0;
-    }
-
-    /**
-     * Get preview chunks - header and content - as
-     * array(string $headerContent, string $previewContent, boolean $continueRendering)
-     *
-     * @param array $row The record data to be analysed for variables to use in a rendered preview
-     * @return array
-     */
-    public function getPreview(array $row)
-    {
-        if ($this->contentObjectType !== $row['CType']) {
-            return [null, null, true];
-        }
-
-        $previewContent = $this->getPreviewView()->getPreview($this, $row);
-        return [null, $previewContent, empty($previewContent)];
     }
 }

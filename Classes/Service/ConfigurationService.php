@@ -8,6 +8,7 @@ namespace FluidTYPO3\Fluidcontent\Service;
  * LICENSE.md file that was distributed with this source code.
  */
 
+use FluidTYPO3\Fluidcontent\Provider\ContentProvider;
 use FluidTYPO3\Flux\Configuration\ConfigurationManager;
 use FluidTYPO3\Flux\Core;
 use FluidTYPO3\Flux\Form;
@@ -119,7 +120,7 @@ class ConfigurationService extends FluxService implements SingletonInterface
     public function getContentConfiguration($extensionName = null)
     {
         if (null !== $extensionName) {
-            return $this->getViewConfigurationForExtensionName($extensionName);
+            return (new \TYPO3\CMS\Fluid\View\TemplatePaths(ExtensionNamingUtility::getExtensionKey($extensionName)))->toArray();
         }
         $registeredExtensionKeys = (array) Core::getRegisteredProviderExtensionKeys('Content');
         $configuration = [];
@@ -316,6 +317,8 @@ class ConfigurationService extends FluxService implements SingletonInterface
         $elements = [];
         $allTemplatePaths = $this->getContentConfiguration();
         $controllerName = 'Content';
+        $provider = $this->objectManager->get(ContentProvider::class);
+
         foreach ($allTemplatePaths as $registeredExtensionKey => $templatePathSet) {
             $files = [];
             if (isset($templatePathSet['extensionKey'])) {
@@ -324,10 +327,8 @@ class ConfigurationService extends FluxService implements SingletonInterface
                 $extensionKey = $registeredExtensionKey;
             }
             $extensionKey = ExtensionNamingUtility::getExtensionKey($extensionKey);
-            $templatePaths = new TemplatePaths($templatePathSet);
-            $viewContext = new ViewContext(null, $extensionKey);
-            $viewContext->setTemplatePaths($templatePaths);
-            $viewContext->setSectionName('Configuration');
+            $provider->setExtensionKey($extensionKey);
+            $templatePaths = new \TYPO3\CMS\Fluid\View\TemplatePaths($templatePathSet);
             foreach ($templatePaths->getTemplateRootPaths() as $templateRootPath) {
                 $files = GeneralUtility::getAllFilesAndFoldersInPath(
                     $files,
@@ -340,8 +341,10 @@ class ConfigurationService extends FluxService implements SingletonInterface
                     foreach ($files as $templateFilename) {
                         $actionName = pathinfo($templateFilename, PATHINFO_FILENAME);
                         $fileRelPath = $actionName . '.html';
-                        $viewContext->setTemplatePathAndFilename($templateFilename);
-                        $form = $this->getFormFromTemplateFile($viewContext);
+
+                        $provider->setTemplatePathAndFilename($templateFilename);
+                        $provider->setControllerAction($actionName);
+                        $form = $provider->getForm([]);
                         if (empty($form) || !$form->getEnabled()) {
                             $this->sendDisabledContentWarning($templateFilename);
                             continue;
